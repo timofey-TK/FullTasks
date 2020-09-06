@@ -65,11 +65,10 @@ export default {
   methods: {
     // сделать задачу выполненной
     setIsChecked(id) {
-      this.checkedTask = !this.checkedTask
       db.collection("tasks")
         .doc(id)
         .update({
-          isDone: this.checkedTask
+          isDone: !this.UTasks.data.isDone
         });
 
     },
