@@ -1,6 +1,6 @@
 <template>
 <div id="home">
-
+  <!-- Кнопка добавления задачи -->
   <div class="createMenu " v-if="user">
     <div class="icon-wrapper" @click="activeCreateMenu = !activeCreateMenu">
       <box-icon name='plus' size="md" :class="{activeIcon:activeCreateMenu }"></box-icon>
@@ -13,15 +13,42 @@
 
     </div>
   </div>
-  <h1 class="title">Task List: </h1>
-  <div class="placeholder" v-if="!UTasks.length">Задачи отсутствуют или вы не вошли в аккаунт</div>
-  <div class="wrapper">
+
+  <div class="tasks-nav">
+    <h1 class="title">Список задач: </h1>
+  </div>
+  <!-- Плейсхолде, если пользователь не вошел -->
+  <div v-if="!isLog" class="placeholder">
+    <h2>
+      Чтобы начать пользоваться приложением войдите в систему:
+    </h2>
+    <vs-alert shadow class="alert">
+    <template #title>
+      Можете опробовать без регистрации!
+    </template>
+    Войдите в систему <br>
+    логин: tasks@gmail.com <br>
+    пароль: testtest <br>
+    Просьба оставлять адекватные задачи))  
+    
+  </vs-alert>
+
+    <div class="btn-wrapper">
+
+      <LoginBtn />
+      <RegisterBtn />
+    </div>
+
+  </div>
+  <!-- Задачи -->
+  <div class="wrapper" v-if="isLog">
     <div class="task-card" v-for="(task, index) in UTasks" :key="index" :class="{completed: task.data.isDone}">
 
       <div class="color-line"></div>
 
       <nav class="nav">
-        <vs-checkbox success v-model="task.data.isDone" @click="setIsChecked(task.id)">
+        <vs-checkbox line-through success v-model="task.data.isDone" @click="setIsChecked(task.id, task)">
+          Не выполненно
         </vs-checkbox>
         <box-icon name='trash-alt' @click="deleteTask(task.id)" type='solid'></box-icon>
       </nav>
@@ -33,7 +60,9 @@
         </p>
       </div>
     </div>
-
+    <div class="task-placeholder" @click="activeCreateMenu = !activeCreateMenu">
+      <h3>Добавить задачу</h3>
+    </div>
   </div>
 
 </div>
@@ -46,13 +75,21 @@ import {
   auth
 } from "@/db.js";
 
+import LoginBtn from '@/components/login_btn'
+import RegisterBtn from '@/components/register_btn'
+
 export default {
+  components: {
+    LoginBtn,
+    RegisterBtn,
+  },
   data() {
     return {
+      filterData: '',
+      value: '',
       FormTitle: '',
       FormDescription: '',
       activeCreateMenu: false,
-      checkedTask: false,
       user: null,
       UTasks: [],
       isLog: false,
@@ -64,11 +101,11 @@ export default {
   },
   methods: {
     // сделать задачу выполненной
-    setIsChecked(id) {
+    setIsChecked(id, task) {
       db.collection("tasks")
         .doc(id)
         .update({
-          isDone: !this.UTasks.data.isDone
+          isDone: !task.data.isDone
         });
 
     },
@@ -82,6 +119,7 @@ export default {
         text
       })
     },
+
     // добавить задачу в бд 
     addTask() {
       if (this.FormTitle != '') {
@@ -89,7 +127,8 @@ export default {
           title: this.FormTitle,
           description: this.FormDescription,
           isDone: false,
-          uid: this.user.uid
+          uid: this.user.uid,
+          createdAt: Date.now()
         });
         this.FormTitle = "",
           this.FormDescription = ""
@@ -105,6 +144,7 @@ export default {
         .delete();
       this.openNotification(null, "primary", "<box-icon name='bell-ring' type='solid' color='#ffffff' ></box-icon>", "Задача удалена", `Вы удалили задачу.   Увы, но вернуть ее нельзя`)
     },
+
     // пулучить все данные из бд по user id 
     getTasks(snapshot) {
       this.UTasks = []
@@ -115,12 +155,14 @@ export default {
         })
       });
     },
+
     // наблюдатель измениний в бд
     watchForChanges() {
       db.collection("tasks").where('uid', '==', this.user.uid).onSnapshot(querySnapshot => {
         this.getTasks(querySnapshot)
       })
     },
+
     //  CHECK USER LOGGED IN
     isLoggedIn() {
       var self = this;
@@ -141,7 +183,51 @@ export default {
 </script>
 
 <style>
-.createMenu textarea, input {
+.alert{
+  margin: 0 auto;
+  margin-top: 40px;
+  max-width: 600px;
+  text-align: left;
+  color: #000;
+}
+.vs-select__input {
+  max-height: 40px;
+  box-shadow: 0 5px 20px 0 rgba(0, 0, 0, var(--vs-shadow-opacity));
+  background-color: #fff;
+}
+
+.placeholder {
+
+  padding: 40px 10px 40px 10px;
+  text-align: center;
+  box-shadow: 0 5px 20px 0 rgba(0, 0, 0, var(--vs-shadow-opacity));
+  border-radius: 20px;
+}
+
+.task-placeholder {
+
+  opacity: 0.6;
+  width: 200px;
+  height: 150px;
+  cursor: pointer;
+  box-shadow: 0 5px 20px 0 rgba(0, 0, 0, var(--vs-shadow-opacity));
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  border: 10px solid #fff;
+  border-radius: 20px;
+  transition: all 0.3s ease;
+
+}
+
+.btn-wrapper {
+  margin-top: 30px;
+  justify-content: center;
+  display: flex;
+}
+
+.createMenu textarea,
+input {
   -webkit-box-sizing: border-box;
   box-sizing: border-box;
   outline: none;
@@ -160,10 +246,12 @@ export default {
   width: 100%;
   height: 200px;
 }
+
 .createMenu input {
   max-height: 40px;
   margin-bottom: 20px;
 }
+
 .completed {
   background: #add580 !important;
 }
@@ -182,8 +270,10 @@ export default {
 .title {
   padding: 0;
   margin: 0;
-  margin-bottom: 110px;
+  margin-bottom: 100px;
 }
+
+
 
 .icon-wrapper {
   cursor: pointer;

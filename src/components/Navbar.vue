@@ -1,85 +1,25 @@
 <template>
 <vs-navbar center-collapsed v-model="active">
   <template #left>
-    <h2>FullTasks</h2>
+    <router-link :to="{ name: 'Home' }" class="logo">FullTasks</router-link>
   </template>
   <vs-navbar-item :to="{ name: 'Home' }" :active="active == 'home'" id="home">
-    Home
+    Главная
   </vs-navbar-item>
-  <vs-navbar-item :to="{ name: 'About'}" :active="active == 'about'" id="about">
-    About
+  <!-- <vs-navbar-item :to="{ name: 'Page2'}" :active="active == 'page2'" id="page2">
+    Страница#2
   </vs-navbar-item>
+  <vs-navbar-item :to="{ name: 'Page3'}" :active="active == 'page3'" id="page3">
+    Страница#3
+  </vs-navbar-item> -->
   <template #right>
     <!-- Sign out BTN -->
-    <vs-button gradient warn v-if="IsLog" @click="signOut">Sign out</vs-button>
-
+    <vs-button gradient warn v-if="IsLog" @click="signOut">Выйти</vs-button>
     <!-- LOGIN BTN -->
-    <vs-button primary gradient v-if="!IsLog" @click="LoginDialog = true">Login</vs-button>
-
+    <LoginBtn v-if="!IsLog"></LoginBtn>
     <!-- REGISTER BTN -->
-    <vs-button primary gradient v-if="!IsLog" @click="RegisterDialog = true">Register</vs-button>
+    <RegisterBtn v-if="!IsLog"></RegisterBtn>
 
-    <!-- LOGIN DIALOG -->
-    <vs-dialog v-model="LoginDialog">
-      <template #header>
-        <h4 class="not-margin">Login to <b>FullTasks</b></h4>
-      </template>
-
-      <div class="con-form">
-        <vs-input v-model="Lemail" placeholder="Email">
-          <template #icon>
-            <box-icon name='mail-send'></box-icon>
-          </template>
-        </vs-input>
-        <vs-input type="password" v-model="Lpassword" placeholder="Password">
-          <template #icon>
-            <box-icon name='lock'></box-icon>
-          </template>
-        </vs-input>
-      </div>
-
-      <template #footer>
-        <div class="footer-dialog">
-          <vs-button block @click="Login">
-            Sign In
-          </vs-button>
-
-          <div class="new">New Here? <a href="#">Create New Account</a></div>
-        </div>
-      </template>
-    </vs-dialog>
-    <!-- LOGIN DIALOG -->
-
-    <!-- REGISTER DIALOG -->
-    <vs-dialog v-model="RegisterDialog">
-      <template #header>
-        <h4 class="not-margin">Register to <b>FullTasks</b></h4>
-      </template>
-
-      <div class="con-form">
-        <vs-input v-model="Remail" placeholder="Email">
-          <template #icon>
-            <box-icon name='mail-send'></box-icon>
-          </template>
-        </vs-input>
-        <vs-input type="password" v-model="Rpassword" placeholder="Password">
-          <template #icon>
-            <box-icon name='lock'></box-icon>
-          </template>
-        </vs-input>
-      </div>
-
-      <template #footer>
-        <div class="footer-dialog">
-          <vs-button block @click="Register">
-            Register
-          </vs-button>
-
-          <div class="new"><a href="#">Login</a></div>
-        </div>
-      </template>
-    </vs-dialog>
-    <!-- REGISTER DIALOG -->
   </template>
 </vs-navbar>
 </template>
@@ -90,15 +30,15 @@ import {
   auth
 } from "@/db.js";
 
+import LoginBtn from '@/components/login_btn'
+import RegisterBtn from '@/components/register_btn'
 export default {
+  components: {
+    LoginBtn,
+    RegisterBtn,
+  },
   data: () => ({
     active: "home",
-    LoginDialog: false,
-    Lemail: "",
-    Lpassword: "",
-    RegisterDialog: false,
-    Remail: "",
-    Rpassword: "",
     IsLog: false,
     error: '',
   }),
@@ -127,29 +67,22 @@ export default {
     signOut() {
       auth.signOut()
     },
-    // LOGIN
-    Login() {
-      auth
-        .signInWithEmailAndPassword(this.Lemail, this.Lpassword)
-        .catch(function (error) {
-          alert(error.message + ' Try again.')
-        });
-      this.LoginDialog = false
-    },
-    // REGISTER
-    Register() {
-      auth
-        .createUserWithEmailAndPassword(this.Remail, this.Rpassword)
-        .catch(function (error) {
-          alert(error.message + '. Try again.')
-        });
-      this.RegisterDialog = false;
-    },
   },
 };
 </script>
 
 <style>
+.logo{
+  display: block;
+  text-decoration: none;
+  font-size: 2em;
+  color: #000;
+  font-weight: bold;
+}
+.vs-input-content input {
+  max-height: 40px;
+}
+
 .not-margin {
   margin: 0px;
   font-weight: normal;
